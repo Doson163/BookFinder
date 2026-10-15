@@ -1,0 +1,16 @@
+node_modules
+dist
+.git
+*.tsbuildinfo
+*.log
+.env*
+README.md
+DEPLOYMENT.md
+
+work
+
+
+.secrets
+Set-TunnelToken.ps1
+compose*.yaml
+

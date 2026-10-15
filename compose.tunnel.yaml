@@ -1,0 +1,15 @@
+services:
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: ["tunnel", "--no-autoupdate", "run", "--token-file", "/run/secrets/tunnel_token"]
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+    secrets:
+      - tunnel_token
+    security_opt:
+      - no-new-privileges:true
+secrets:
+  tunnel_token:
+    file: ./.secrets/tunnel-token

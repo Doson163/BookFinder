@@ -1,0 +1,15 @@
+import { useEffect, useRef, useState } from 'react';
+import { X, Heart, ExternalLink } from 'lucide-react';
+import { request, type Book, type Work } from '../lib/books';
+import { Cover } from './BookCard';
+export default function BookDetail({ book, saved, toggle, close }: {book: Book; saved: boolean; toggle: (b: Book) => void; close: () => void}) {
+ const dialog = useRef<HTMLDialogElement>(null);
+ const [data, setData] = useState<Work>(); const [error, setError] = useState(false); const [attempt, setAttempt] = useState(0);
+ useEffect(() => { const el = dialog.current!; const prior = document.activeElement as HTMLElement; el.showModal(); const overflow = document.body.style.overflow; document.body.style.overflow = 'hidden'; return () => { el.close(); document.body.style.overflow = overflow; prior?.focus(); }; }, []);
+ useEffect(() => { let active = true; const controller = new AbortController(); const timeout = window.setTimeout(() => controller.abort(), 15000); setError(false); setData(undefined); request<Work>(`https://openlibrary.org${book.key}.json`, controller.signal).then(result => { if (active) { setData(result); setError(false); } }).catch(() => { if (active) setError(true); }).finally(() => clearTimeout(timeout)); return () => { active = false; clearTimeout(timeout); controller.abort(); }; }, [book.key, attempt]);
+ const description = typeof data?.description === 'string' ? data.description : data?.description?.value;
+ return <dialog ref={dialog} aria-labelledby="detail-title" onCancel={close} onClick={e => {if(e.target === e.currentTarget) close();}} className="detail-dialog"><button className="close-button" onClick={close} aria-label="Đóng thông tin sách"><X/></button><div className="detail-layout"><Cover book={book} large/><div><p className="eyebrow">THÔNG TIN CHI TIẾT</p><h2 id="detail-title">{book.title}</h2><p className="mt-3 text-stone-600">{book.author_name?.join(', ') || 'Chưa rõ tác giả'}</p><div className="metadata"><span>Xuất bản lần đầu<strong>{book.first_publish_year ?? 'Chưa có dữ liệu'}</strong></span><span>Số ấn bản<strong>{book.edition_count ?? 'Chưa có dữ liệu'}</strong></span></div><button className="primary inline-flex items-center gap-2" onClick={() => toggle(book)}><Heart size={17} fill={saved ? 'currentColor' : 'none'}/>{saved ? 'Bỏ lưu sách' : 'Lưu vào tủ sách'}</button><h3 className="mt-8 mb-3 font-semibold">Giới thiệu sách</h3>{error ? <p role="alert">Không thể tải thông tin chi tiết. <button className="text-link" onClick={() => setAttempt(x=>x+1)}>Thử lại</button></p> : !data ? <p role="status" className="animate-pulse">Đang tải thông tin sách…</p> : <p className="description">{description || 'Sách này chưa có mô tả. Bạn có thể xem các ấn bản và lựa chọn đọc trên Open Library.'}</p>}<div className="mt-5 flex flex-wrap gap-2">{data?.subjects?.slice(0,6).map(s=><span className="tag" key={s}>{s}</span>)}</div><a className="text-link mt-6 inline-flex items-center gap-2" href={`https://openlibrary.org${book.key}`} target="_blank" rel="noreferrer">Xem trên Open Library <ExternalLink size={15}/></a></div></div></dialog>;
+}
+
+
+

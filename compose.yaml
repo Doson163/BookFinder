@@ -1,0 +1,15 @@
+name: bookfinder-cv
+services:
+  web:
+    build: .
+    image: bookfinder-cv:local
+
+    ports:
+      - "127.0.0.1:8088:8080"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+
+
+
+
